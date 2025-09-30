@@ -6,25 +6,26 @@ import (
 	"gorm.io/gorm"
 )
 
-type orderImpRepository interface {
-	GetOrderByID(uint) (*model.Order, error)
-	UpdeteOrder(uint, *model.Order) (*model.Order, error)
+type OrderIrfRepository interface {
+	GetPepoOrderByID(uint) (*model.Order, error)
 }
 
 type orderRepository struct {
 	db *gorm.DB
 }
 
-func NewOrderRepository(db *gorm.DB) orderImpRepository {
+func NewOrderRepository(db *gorm.DB) OrderIrfRepository {
 	return &orderRepository{db: db}
 }
 
-func (o *orderRepository) GetOrderByID(id uint) (*model.Order, error) {
+func (o *orderRepository) GetPepoOrderByID(id uint) (*model.Order, error) {
 
-	return nil, nil
-}
+	order := model.Order{}
+	err := o.db.First(&order, id)
 
-func (o *orderRepository) UpdeteOrder(id uint, order *model.Order) (*model.Order, error) {
+	if err.Error != nil {
+		return nil, err.Error
+	}
 
-	return nil, nil
+	return &order, nil
 }
