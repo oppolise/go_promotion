@@ -3,6 +3,9 @@ package main
 import (
 	"goPromotion/cmd/database"
 	serverconfig "goPromotion/config/server_config"
+	"goPromotion/handler"
+	"goPromotion/pkg/repository"
+	"goPromotion/pkg/service"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -27,6 +30,12 @@ func main() {
 	}
 
 	app := fiber.New()
+
+	orderPepo := repository.NewOrderRepository(db)
+	orderService := service.NewOrderImpService(orderPepo)
+	orderHandler := handler.NewHttpOrderHandler(orderService)
+
+	app.Get("/order/:id", orderHandler.GetOrder)
 
 	app.Listen(":" + serverconfig.ServerConfig().PORT)
 }
