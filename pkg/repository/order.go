@@ -21,10 +21,19 @@ func NewOrderRepository(db *gorm.DB) OrderIrfRepository {
 func (o *orderRepository) GetPepoOrderByID(id uint) (*model.Order, error) {
 
 	order := model.Order{}
-	err := o.db.First(&order, id)
+	err := o.db.
+		Preload("OrderDetails").
+		Preload("OrderDetails.Product"). // ถ้าต้องใช้ชื่อสินค้า
+		Preload("Promotions", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "condition_id") // เก็บเฉพาะ field ที่ต้องการ
+		}).
+		Preload("Promotions.Condition", func(db *gorm.DB) *gorm.DB {
+			return db.Select("id", "payment_id", "ScopeDiscount", "min_price") // แล้วแต่ logic
+		}).
+		First(&order, id).Error
 
-	if err.Error != nil {
-		return nil, err.Error
+	if err != nil {
+		return nil, err
 	}
 
 	return &order, nil

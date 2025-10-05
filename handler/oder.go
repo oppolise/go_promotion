@@ -16,17 +16,22 @@ func NewHttpOrderHandler(service service.OrderItfService) *HttpOrderHandler {
 }
 
 func (h *HttpOrderHandler) GetOrder(c *fiber.Ctx) error {
+
 	id := c.Params("id")
 	orderID, err := strconv.Atoi(id)
 
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(err)
+		c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
 	}
 
 	order, err := h.service.GetServiceOrder(uint(orderID))
 
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": err.Error(),
+		})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(order)
