@@ -36,7 +36,7 @@ func CheckConditionProductsITEM(condition model.Condition, orderDetails []model.
 	}
 	for reqID := range requiredProductIDs {
 		if !orderProductIDs[reqID] {
-			return false, "ไม่มีประเภทสินค้าครบตามเงื่อนไข promotion"
+			return false, "ไม่มีสินค้าครบตามเงื่อนไข promotion"
 		}
 	}
 
@@ -143,6 +143,7 @@ func CheckConditionProductsORDER(condition model.Condition, orderDetails []model
 
 func SumQuantity(orderDetails []model.OrderDetail) int {
 	total := 0
+
 	for _, detail := range orderDetails {
 		total += int(detail.Quantity)
 	}
@@ -151,6 +152,7 @@ func SumQuantity(orderDetails []model.OrderDetail) int {
 
 func SumLineSubtotal(orderDetails []model.OrderDetail) int {
 	total := 0
+
 	for _, detail := range orderDetails {
 		total += int(detail.TotalPrice)
 	}
@@ -214,6 +216,7 @@ func CalculateOrderDiscount(promo model.Promotion, subtotal int) int {
 	return discount
 }
 
+// this fuction for debug discout item
 func DistributeDiscount(orderDetails []model.OrderDetail, totalDiscount int) map[uint]int {
 	lineDiscounts := make(map[uint]int)
 	totalPrice := SumLineSubtotal(orderDetails)
@@ -237,8 +240,29 @@ func DistributeDiscount(orderDetails []model.OrderDetail, totalDiscount int) map
 			lineDiscount = int(detail.TotalPrice)
 		}
 
-		lineDiscounts[detail.OrderID] = lineDiscount
+		lineDiscounts[detail.ProductID] = lineDiscount
 	}
 
 	return lineDiscounts
+}
+
+func FilterOrderDetailsByConditionProducts(condition model.Condition, orderDetails []model.OrderDetail) []model.OrderDetail {
+
+	if len(condition.Products) == 0 {
+		return []model.OrderDetail{}
+	}
+
+	requiredProductIDs := make(map[uint]bool)
+	for _, prod := range condition.Products {
+		requiredProductIDs[prod.ID] = true
+	}
+
+	filtered := []model.OrderDetail{}
+	for _, detail := range orderDetails {
+		if requiredProductIDs[detail.ProductID] {
+			filtered = append(filtered, detail)
+		}
+	}
+
+	return filtered
 }

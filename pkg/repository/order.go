@@ -27,7 +27,7 @@ func (o *orderRepository) GetPepoOrderByID(id uint) (*model.Order, error) {
 		Preload("Promotions").
 		Preload("Promotions.Condition").
 		Preload("Promotions.Condition.Payment").
-		Preload("Promotions.Condition.Products"). // ← สำหรับ CP
+		Preload("Promotions.Condition.Products").
 		Preload("Promotions.Condition.Categories").
 		First(&order, id).Error
 

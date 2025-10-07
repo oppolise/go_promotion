@@ -81,21 +81,24 @@ func (o *orderImpService) GetServiceOrder(id uint) (*dto.PromotionResult, error)
 	eligibleItemPromos := []model.Promotion{}
 
 	for _, promo := range itemPromos {
-		ok, reason := utils.CheckConditionProductsITEM(*promo.Condition, order.OrderDetails)
-		if !ok {
-			result.RejectedReasons[promo.ID] = reason
+
+		orderFilter := utils.FilterOrderDetailsByConditionProducts(*promo.Condition, order.OrderDetails)
+
+		totalPrice := utils.SumLineSubtotal(orderFilter)
+		if totalPrice < int(promo.Condition.MinPrice) {
+			result.RejectedReasons[promo.ID] = "ยอดรวมไม่ถึงขั้นต่ำ"
 			continue
 		}
 
-		totalQty := utils.SumQuantity(order.OrderDetails)
+		totalQty := utils.SumQuantity(orderFilter)
 		if totalQty < int(promo.Condition.MinQuantityItem) {
 			result.RejectedReasons[promo.ID] = "จำนวนสินค้าไม่ถึงขั้นต่ำ"
 			continue
 		}
 
-		totalPrice := utils.SumLineSubtotal(order.OrderDetails)
-		if totalPrice < int(promo.Condition.MinPrice) {
-			result.RejectedReasons[promo.ID] = "ยอดรวมไม่ถึงขั้นต่ำ"
+		ok, reason := utils.CheckConditionProductsITEM(*promo.Condition, orderFilter)
+		if !ok {
+			result.RejectedReasons[promo.ID] = reason
 			continue
 		}
 
@@ -108,17 +111,18 @@ func (o *orderImpService) GetServiceOrder(id uint) (*dto.PromotionResult, error)
 	appliedItemPromos := []uint{}
 
 	for _, promo := range eligibleItemPromos {
-		discount := utils.CalculateItemDiscount(promo, order.OrderDetails)
+		orderFilter := utils.FilterOrderDetailsByConditionProducts(*promo.Condition, order.OrderDetails)
+		discount := utils.CalculateItemDiscount(promo, orderFilter)
 		if discount > 0 {
 			totalItemDiscount += discount
 			appliedItemPromos = append(appliedItemPromos, promo.ID)
 		}
 	}
 
-	itemLineDiscounts := utils.DistributeDiscount(order.OrderDetails, totalItemDiscount)
-	for detailID, discount := range itemLineDiscounts {
-		result.LineDiscounts[detailID] = discount
-	}
+	// itemLineDiscounts := utils.DistributeDiscount(order.OrderDetails, totalItemDiscount)
+	// for detailID, discount := range itemLineDiscounts {
+	// 	result.LineDiscounts[detailID] = discount
+	// }
 
 	originalSubtotal := utils.SumLineSubtotal(order.OrderDetails)
 	subtotalAfterItem := originalSubtotal - totalItemDiscount
@@ -161,12 +165,10 @@ func (o *orderImpService) GetServiceOrder(id uint) (*dto.PromotionResult, error)
 		}
 	}
 
-	if totalCartDiscount > 0 {
-		cartLineDiscounts := utils.DistributeDiscount(order.OrderDetails, totalCartDiscount)
-		for detailID, discount := range cartLineDiscounts {
-			result.LineDiscounts[detailID] += discount
-		}
-	}
+	// cartLineDiscounts := utils.DistributeDiscount(order.OrderDetails, totalCartDiscount)
+	// for detailID, discount := range cartLineDiscounts {
+	// 	result.LineDiscounts[detailID] += discount
+	// }
 
 	result.AppliedPromos = append(appliedItemPromos, appliedCartPromos...)
 	result.OriginalSubtotal = originalSubtotal
