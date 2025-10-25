@@ -15,6 +15,14 @@ func NewHttpOrderHandler(service service.OrderItfService) *HttpOrderHandler {
 	return &HttpOrderHandler{service: service}
 }
 
+// GetOrder godoc
+// @Summary Get Order by id
+// @Description Get Order by ID
+// @Tags Order
+// @Accept json
+// @Produce json
+// @Param id path int true "Order ID"
+// @Router /order/{id} [get]
 func (h *HttpOrderHandler) GetOrder(c *fiber.Ctx) error {
 
 	id := c.Params("id")

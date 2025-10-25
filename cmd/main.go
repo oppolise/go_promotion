@@ -3,14 +3,21 @@ package main
 import (
 	"goPromotion/cmd/database"
 	serverconfig "goPromotion/config/server_config"
+	_ "goPromotion/docs"
 	"goPromotion/handler"
 	"goPromotion/pkg/repository"
 	"goPromotion/pkg/service"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/swagger"
 	"github.com/joho/godotenv"
 )
+
+// @title Example API
+// @version 1.0
+// @description test swag
+// @BasePath /
 
 func main() {
 
@@ -30,6 +37,7 @@ func main() {
 	}
 
 	app := fiber.New()
+	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	orderPepo := repository.NewOrderRepository(db)
 	orderService := service.NewOrderImpService(orderPepo)
